@@ -2,11 +2,18 @@
 // и вливает quests.js в клиент, если скрипт там ещё не работает.
 // Повторяет попытку каждые 30 секунд — переживает перезагрузку страницы,
 // ручной перезапуск клиента и обновления Discord.
-import { readFileSync, statSync, appendFileSync, writeFileSync } from "node:fs";
+//
+// Если Discord запущен БЕЗ порта отладки (например, клиент перезапустил сам
+// себя через своё меню или после обновления) — супервизор аккуратно
+// перезапускает его через лаунчер с портом. Не чаще раза в 2 минуты.
+// Отключить: touch ~/.local/share/discord-quests/NO_RELAUNCH
+import { readFileSync, statSync, appendFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
+import { execSync, spawn } from "node:child_process";
 
 const DIR = `${homedir()}/.local/share/discord-quests`;
 const LOG = `${DIR}/supervisor.log`;
+const WRAPPER = `${homedir()}/.local/bin/discord-quests`;
 const log = (m) => {
   try { if (statSync(LOG).size > 512 * 1024) writeFileSync(LOG, ""); } catch (_) {}
   appendFileSync(LOG, `${new Date().toISOString()} ${m}\n`);
@@ -46,12 +53,65 @@ function connect(target) {
   });
 }
 
+// Главные процессы Discord без --remote-debugging-port (дети --type=... не считаются)
+function bareDiscord() {
+  const out = [];
+  for (const d of readdirSync("/proc")) {
+    if (!/^\d+$/.test(d)) continue;
+    let argv0;
+    try { argv0 = readFileSync(`/proc/${d}/cmdline`, "utf8").split("\0")[0]; } catch (_) { continue; }
+    if (!argv0 || !argv0.endsWith("/Discord")) continue;
+    out.push({ pid: d, argv0 });
+  }
+  return out;
+}
+
+// Наследуем окружение у живого процесса Discord (WAYLAND_DISPLAY/DISPLAY и т.д.),
+// чтобы запустить клиент с графикой из systemd-сервиса.
+function envOf(pid) {
+  try {
+    const env = {};
+    for (const kv of readFileSync(`/proc/${pid}/environ`, "utf8").split("\0")) {
+      const i = kv.indexOf("=");
+      if (i > 0) env[kv.slice(0, i)] = kv.slice(i + 1);
+    }
+    return env;
+  } catch (_) { return {}; }
+}
+
+let lastRelaunch = 0;
+function maybeRelaunch() {
+  if (existsSync(`${DIR}/NO_RELAUNCH`)) return;
+  if (Date.now() - lastRelaunch < 120000) return;
+  const bare = bareDiscord();
+  if (!bare.length) return; // Discord просто не запущен — его запустит пользователь
+  lastRelaunch = Date.now();
+  log(`Discord запущен без порта отладки (pid ${bare.map((b) => b.pid).join(",")}) — перезапускаю через лаунчер`);
+  try {
+    execSync("killall Discord 2>/dev/null || true", { shell: "/bin/bash" });
+  } catch (_) {}
+  setTimeout(() => {
+    try { execSync("killall -9 Discord 2>/dev/null || true", { shell: "/bin/bash" }); } catch (_) {}
+    setTimeout(() => {
+      const env = { ...process.env, ...envOf(bare[0].pid) };
+      try {
+        const child = spawn(WRAPPER, [], { detached: true, stdio: "ignore", env });
+        child.unref();
+        log("Discord перезапущен с портом отладки");
+      } catch (e) {
+        log(`не удалось запустить лаунчер: ${e.message}`);
+      }
+    }, 2000);
+  }, 4000);
+}
+
 async function cycle() {
   let targets;
   try {
     targets = await (await fetch("http://127.0.0.1:9222/json", { signal: AbortSignal.timeout(3000) })).json();
   } catch (_) {
-    return; // Discord не запущен или без порта — молча ждём дальше
+    maybeRelaunch(); // порт не отвечает
+    return;
   }
   const pages = targets.filter((t) => t.type === "page" && t.url.startsWith("https://discord.com/"));
   const page = pages.find((t) => t.url.includes("/channels")) ?? pages[0];
