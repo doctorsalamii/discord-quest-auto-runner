@@ -110,3 +110,8 @@ systemctl --user disable --now discord-quests.service
 ## License
 
 MIT — use, modify, share.
+
+## Credits
+
+- **Code**: written by **GLM** — an AI assistant (ZCode, model by Z.ai) — at the request of, and iterated with, the repo owner. Commits authored by it appear in the history as `GLM (ZCode AI)`.
+- **Idea, testing on real hardware, setup & publication**: [@doctorsalamii](https://github.com/doctorsalamii).
