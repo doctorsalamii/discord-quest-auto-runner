@@ -36,7 +36,7 @@ That's it. Stop with `__questsStop()`, status with `__questsStatus()`.
 ### Linux (Arch-based, e.g. Omarchy) — one command
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/install-linux.sh | bash
+curl -fsSL https://raw.githubusercontent.com/doctorsalamii/discord-quest-auto-runner/main/install-linux.sh | bash
 ```
 
 What it does:
@@ -50,7 +50,7 @@ After that: just open Discord normally. Quests complete themselves. Rewards are 
 Manual alternative:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+git clone https://github.com/doctorsalamii/discord-quest-auto-runner.git
 cd YOUR_REPO
 ./install-linux.sh
 ```

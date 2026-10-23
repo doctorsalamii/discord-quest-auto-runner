@@ -9,8 +9,8 @@ CONFIG_DIR="$HOME/.config/discord"
 SETTINGS="$CONFIG_DIR/settings.json"
 SERVICE="$HOME/.config/systemd/user/discord-quests.service"
 DESKTOP="$HOME/.local/share/applications/Discord.desktop"
-SCRIPT_URL_QUESTS="https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/quests-en.js"
-SCRIPT_URL_INJECT="https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/supervisor/inject.mjs"
+SCRIPT_URL_QUESTS="https://raw.githubusercontent.com/doctorsalamii/discord-quest-auto-runner/main/quests-en.js"
+SCRIPT_URL_INJECT="https://raw.githubusercontent.com/doctorsalamii/discord-quest-auto-runner/main/supervisor/inject.mjs"
 
 say()  { printf '\033[1;36m==>\033[0m %s\n' "$*"; }
 ok()   { printf '\033[1;32m ✔ \033[0m %s\n' "$*"; }
