@@ -47,6 +47,8 @@ What it does:
 
 After that: just open Discord normally. Quests complete themselves. Rewards are claimed by hand on the quest cards.
 
+> ⏳ **Be patient after opening Discord:** the panel appears within **1–2 minutes**. The supervisor scans every 30 s, and if Discord restarted itself without the debug port, it first waits out a 2-minute cooldown before relaunching it. Everything self-heals — see [Self-healing notes](#self-healing-notes).
+
 Manual alternative:
 
 ```bash
@@ -99,6 +101,17 @@ systemctl --user disable --now discord-quests.service
 | Heartbeat 401/403 on some quest | That quest type is desktop-only or manual — the script tells you which |
 | Reward not auto-claimed | Claim it on the quest card — one click |
 | DevTools don't open (desktop) | Check the settings.json key, restart Discord **after** editing |
+| **Panel / script is missing right after opening Discord** | **Just wait 1–2 minutes.** On startup the supervisor waits for its next scan cycle, and if the client restarted *itself* (its own "Restart", self-update), the supervisor first waits out a 2-minute cooldown and only then relaunches it with the debug port. It self-heals — see the supervisor log if you are impatient: `~/.local/share/discord-quests/supervisor.log` |
+
+## Self-healing notes
+
+The Linux supervisor runs every 30 s and handles all of these on its own, no action needed:
+
+- Discord opened **without** the debug port (own restart / self-update) → detected and relaunched with the port (cooldown: once per 2 minutes)
+- page navigated / reloaded → script re-injected
+- client updated to a new build → still works (method-based module lookup, not minified names)
+
+To disable the auto-relaunch behavior: `touch ~/.local/share/discord-quests/NO_RELAUNCH`
 
 ## Files
 
