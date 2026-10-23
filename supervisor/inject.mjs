@@ -53,15 +53,20 @@ function connect(target) {
   });
 }
 
-// Главные процессы Discord без --remote-debugging-port (дети --type=... не считаются)
+// Главные процессы Discord без --remote-debugging-port (дети --type=... не считаются).
+// Внимание: Chromium склеивает cmdline в одну строку без NUL-разделителей,
+// поэтому первый "токен" вырезаем по пробелу.
 function bareDiscord() {
   const out = [];
   for (const d of readdirSync("/proc")) {
     if (!/^\d+$/.test(d)) continue;
     let argv0;
     try { argv0 = readFileSync(`/proc/${d}/cmdline`, "utf8").split("\0")[0]; } catch (_) { continue; }
-    if (!argv0 || !argv0.endsWith("/Discord")) continue;
-    out.push({ pid: d, argv0 });
+    if (!argv0) continue;
+    const exe = argv0.split(" ")[0];
+    if (!exe.endsWith("/Discord")) continue;
+    if (argv0.includes("--type=")) continue; // дочерний процесс
+    out.push({ pid: d, argv0: exe });
   }
   return out;
 }
