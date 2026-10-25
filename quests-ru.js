@@ -521,15 +521,6 @@ try { delete window.$; } catch (_) {}
       .empty b { display: block; color: #dbdee1; font-size: 13px; font-weight: 700; margin-bottom: 3px; }
       .empty s { text-decoration: none; font-size: 12px; }
       .foot { padding: 6px 16px 14px; }
-      .log { max-height: 84px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
-        font-size: 11.5px; line-height: 1.5; color: #b5bac1; }
-      .log:empty { display: none; }
-      .log::-webkit-scrollbar { width: 6px; }
-      .log::-webkit-scrollbar-thumb { background: rgba(255,255,255,.16); border-radius: 3px; }
-      .log div { display: flex; gap: 7px; overflow-wrap: anywhere; }
-      .log i { flex: none; width: 6px; height: 6px; border-radius: 50%; margin-top: 6px; background: #00a8fc; }
-      .log .ok i { background: #57f287; } .log .err i { background: #f23f43; }
-      .log .warn i { background: #f0b232; } .log .run i { background: #8b95ff; }
       .set { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
       .lbl { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px;
         font-weight: 700; color: #f2f3f5; min-height: 40px; }
@@ -564,7 +555,6 @@ try { delete window.$; } catch (_) {}
       <div class="sum"><i></i></div>
       <div class="body"></div>
       <div class="foot">
-        <div class="log"></div>
         <div class="set">
           <div class="lbl"><button class="sw" role="switch" aria-checked="false" aria-label="Принимать новые"></button><span>Принимать новые</span></div>
           <button class="ghost"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>Обновить</button>
@@ -572,7 +562,6 @@ try { delete window.$; } catch (_) {}
       </div>`;
     sh.appendChild(panel);
     const bodyEl = panel.querySelector(".body");
-    const logEl = panel.querySelector(".log");
     const subEl = panel.querySelector(".tt span");
     const sumEl = panel.querySelector(".sum i");
     const swEl = panel.querySelector(".sw");
@@ -634,9 +623,6 @@ try { delete window.$; } catch (_) {}
     const syncSw = () => { swEl.classList.toggle("on", CONFIG.autoEnroll); swEl.setAttribute("aria-checked", String(!!CONFIG.autoEnroll)); };
     syncSw();
     panel.querySelector(".lbl").addEventListener("click", () => { CONFIG.autoEnroll = !CONFIG.autoEnroll; syncSw(); });
-
-    const logClass = (l) =>
-      l.startsWith("✔") ? "ok" : l.startsWith("✖") ? "err" : /Наград|капч|Капч/i.test(l) ? "warn" : l.startsWith("▶") ? "run" : "info";
 
     function updateUI() {
       for (const [id, f] of state.flash) if (Date.now() - f.at >= 20000) state.flash.delete(id);
@@ -730,19 +716,6 @@ try { delete window.$; } catch (_) {}
         frag.appendChild(card);
       }
       bodyEl.replaceChildren(frag);
-
-      const logFrag = document.createDocumentFragment();
-      for (const l of uiLog) {
-        const d = document.createElement("div");
-        d.className = logClass(l);
-        const i = document.createElement("i");
-        const s = document.createElement("span");
-        s.textContent = l;
-        d.append(i, s);
-        logFrag.appendChild(d);
-      }
-      logEl.replaceChildren(logFrag);
-      logEl.scrollTop = logEl.scrollHeight;
     }
 
     let wasOnQuests = false;
