@@ -458,94 +458,92 @@ try { delete window.$; } catch (_) {}
       :host { all: initial; }
       * { box-sizing: border-box; font-family: var(--font-primary, "gg sans", "Segoe UI", sans-serif);
           -webkit-user-select: none; user-select: none; }
+      button { font-family: inherit; }
+      button:focus-visible { outline: 2px solid #8b95ff; outline-offset: 2px; }
       .chip { position: fixed; right: 20px; bottom: 20px; z-index: 99999; display: none;
-        align-items: center; gap: 9px; height: 42px; padding: 0 16px 0 13px; border-radius: 21px;
-        border: 1px solid rgba(255,255,255,.09); cursor: pointer; color: #f2f3f5;
-        background: linear-gradient(180deg, #303338, #232428); font-size: 13px; font-weight: 700;
-        letter-spacing: .2px; box-shadow: 0 6px 20px rgba(0,0,0,.45);
-        transition: transform .18s ease, box-shadow .18s ease; }
-      .chip:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,.55); }
-      .chip.on { border-color: rgba(88,101,242,.7); box-shadow: 0 6px 24px rgba(88,101,242,.35); }
-      .dot { width: 9px; height: 9px; border-radius: 50%; background: #23a55a;
-        box-shadow: 0 0 0 0 rgba(35,165,90,.5); animation: pulse 1.8s infinite; }
-      @keyframes pulse { 70% { box-shadow: 0 0 0 8px rgba(35,165,90,0); } }
+        align-items: center; gap: 9px; height: 44px; padding: 0 16px 0 14px; border-radius: 22px;
+        border: 1px solid rgba(255,255,255,.16); cursor: pointer; color: #f2f3f5;
+        background: rgba(20,21,26,.66); backdrop-filter: blur(24px) saturate(150%);
+        -webkit-backdrop-filter: blur(24px) saturate(150%); font-size: 13px; font-weight: 700;
+        box-shadow: 0 8px 24px rgba(0,0,0,.45); transition: transform .18s ease, border-color .18s; }
+      .chip:hover { transform: translateY(-2px); }
+      .chip.on { border-color: rgba(139,149,255,.6); }
+      .dot { width: 8px; height: 8px; border-radius: 50%; background: #57f287;
+        box-shadow: 0 0 0 0 rgba(87,242,135,.5); animation: pulse 1.8s infinite; }
+      @keyframes pulse { 70% { box-shadow: 0 0 0 8px rgba(87,242,135,0); } }
       .badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; display: none;
         align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800;
-        background: linear-gradient(135deg, #5865f2, #eb459e); }
-      .panel { position: fixed; right: 20px; bottom: 72px; z-index: 99999; display: none; width: 348px;
-        border-radius: 16px; overflow: hidden; color: #f2f3f5; font-size: 13px;
-        background: rgba(32,34,38,.93);
-        backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3);
-        border: 1px solid rgba(255,255,255,.09); box-shadow: 0 18px 50px rgba(0,0,0,.55); }
+        background: #5865f2; }
+      .panel { position: fixed; right: 20px; bottom: 72px; z-index: 99999; display: none; width: 380px;
+        border-radius: 24px; overflow: hidden; color: #f2f3f5; font-size: 13px;
+        background: rgba(20,21,26,.66);
+        backdrop-filter: blur(28px) saturate(150%); -webkit-backdrop-filter: blur(28px) saturate(150%);
+        border: 1px solid rgba(255,255,255,.16); box-shadow: 0 24px 60px rgba(0,0,0,.5); }
       .panel.show { animation: pop .24s cubic-bezier(.2,.9,.35,1.15); }
       @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(.96); } }
-      .head { display: flex; align-items: center; gap: 10px; padding: 12px 12px 11px; cursor: grab;
-        background: linear-gradient(135deg, rgba(88,101,242,.18), rgba(235,69,158,.12));
-        border-bottom: 1px solid rgba(255,255,255,.07); }
+      .head { display: flex; align-items: center; gap: 12px; padding: 16px 16px 14px; cursor: grab; }
       .head:active { cursor: grabbing; }
-      .ico { width: 36px; height: 36px; border-radius: 11px; flex: none; display: flex; align-items: center;
-        justify-content: center; font-size: 18px; background: linear-gradient(135deg, #5865f2, #eb459e);
-        box-shadow: 0 4px 14px rgba(88,101,242,.4); }
+      .grip { flex: none; opacity: .75; }
+      .ico { width: 36px; height: 36px; border-radius: 12px; flex: none; display: flex; align-items: center;
+        justify-content: center; background: #5865f2; color: #fff; }
       .tt { flex: 1; min-width: 0; }
-      .tt b { display: block; font-size: 14px; font-weight: 800; letter-spacing: .3px; }
-      .tt span { display: block; font-size: 11px; font-weight: 600; color: #b5bac1; margin-top: 2px; }
-      .xbtn { width: 28px; height: 28px; border-radius: 9px; border: none; flex: none; cursor: pointer;
-        background: transparent; color: #949ba4; font-size: 13px; transition: background .15s, color .15s; }
-      .xbtn:hover { background: rgba(255,255,255,.09); color: #fff; }
-      .sum { height: 3px; background: rgba(255,255,255,.05); }
-      .sum i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #23a55a, #00a8fc);
+      .tt b { display: block; font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
+      .tt span { display: block; font-size: 12px; font-weight: 600; color: #b5bac1; margin-top: 2px; }
+      .xbtn { width: 32px; height: 32px; border-radius: 10px; border: none; flex: none; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        background: transparent; color: #b5bac1; transition: background .15s, color .15s; }
+      .xbtn:hover { background: rgba(255,255,255,.1); color: #fff; }
+      .sum { height: 3px; margin: 0 16px; border-radius: 2px; background: rgba(255,255,255,.1); overflow: hidden; }
+      .sum i { display: block; height: 100%; width: 0; background: #8b95ff; border-radius: 2px;
         transition: width 1s linear; }
-      .body { padding: 10px 12px 6px; max-height: 47vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+      .body { padding: 14px 16px 4px; max-height: 47vh; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
       .body::-webkit-scrollbar { width: 8px; }
-      .body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.13); border-radius: 4px; }
-      .card { position: relative; border-radius: 12px; background: rgba(255,255,255,.05);
-        padding: 10px 12px 9px 15px; overflow: hidden; }
-      .card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--ac); }
-      .c1 { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
-      .c1 b { flex: 1; font-size: 12.5px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
-      .tag { flex: none; font-size: 9px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase;
-        padding: 2px 8px; border-radius: 6px; color: #fff; background: var(--ac); opacity: .92; }
-      .bar { position: relative; height: 7px; border-radius: 5px; background: rgba(255,255,255,.08); overflow: hidden; }
-      .fill { position: relative; height: 100%; width: 0; border-radius: 5px;
-        background: linear-gradient(90deg, var(--ac), var(--ac2)); transition: width 1.1s linear; }
-      .fill::after { content: ""; position: absolute; inset: 0;
-        background: linear-gradient(100deg, transparent 25%, rgba(255,255,255,.4) 50%, transparent 75%);
-        animation: shine 1.7s infinite; }
-      @keyframes shine { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
-      .c2 { display: flex; justify-content: space-between; margin-top: 5px; font-size: 10.5px;
-        font-weight: 600; color: #949ba4; }
-      .c2 .t { color: #c6c9ce; font-variant-numeric: tabular-nums; }
-      .card.err { --ac: #f0b232; --ac2: #f23f43; }
-      .card.err .fill::after { animation: none; }
-      .flash { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 12px;
-        font-size: 12px; font-weight: 700; color: #7fe0a7; background: rgba(35,165,90,.16);
-        border: 1px solid rgba(35,165,90,.45); }
-      .empty { padding: 26px 8px 22px; text-align: center; color: #949ba4; }
-      .empty i { display: block; font-style: normal; font-size: 30px; margin-bottom: 9px; }
-      .empty b { display: block; color: #c6c9ce; font-size: 12.5px; font-weight: 700; margin-bottom: 3px; }
-      .empty s { text-decoration: none; font-size: 11.5px; }
-      .foot { border-top: 1px solid rgba(255,255,255,.07); padding: 10px 12px 12px; }
+      .body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.16); border-radius: 4px; }
+      .card { border-radius: 16px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.08);
+        padding: 12px 14px; }
+      .c1 { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+      .c1 b { flex: 1; font-size: 14px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+      .tag { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;
+        padding: 3px 9px; border-radius: 8px; color: #dbdee1; background: rgba(255,255,255,.12); }
+      .tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ac); }
+      .bar { position: relative; height: 8px; border-radius: 4px; background: rgba(255,255,255,.12); overflow: hidden; }
+      .fill { height: 100%; width: 0; border-radius: 4px; background: var(--ac); transition: width 1.1s linear; }
+      .c2 { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px;
+        font-weight: 600; color: #c4c9d1; }
+      .c2 .t { font-variant-numeric: tabular-nums; }
+      .card.err { --ac: #f0b232; }
+      .flash { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 16px;
+        font-size: 13px; font-weight: 800; color: #9bf7b8; background: rgba(87,242,135,.14);
+        border: 1px solid rgba(87,242,135,.45); }
+      .flash svg { flex: none; }
+      .empty { padding: 28px 8px 24px; text-align: center; color: #b5bac1; }
+      .empty i { display: flex; justify-content: center; margin-bottom: 10px; opacity: .8; }
+      .empty b { display: block; color: #dbdee1; font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+      .empty s { text-decoration: none; font-size: 12px; }
+      .foot { padding: 6px 16px 14px; }
       .log { max-height: 84px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
-        font-size: 11px; line-height: 1.5; color: #949ba4; }
+        font-size: 11.5px; line-height: 1.5; color: #b5bac1; }
+      .log:empty { display: none; }
       .log::-webkit-scrollbar { width: 6px; }
-      .log::-webkit-scrollbar-thumb { background: rgba(255,255,255,.13); border-radius: 3px; }
+      .log::-webkit-scrollbar-thumb { background: rgba(255,255,255,.16); border-radius: 3px; }
       .log div { display: flex; gap: 7px; overflow-wrap: anywhere; }
-      .log i { flex: none; width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; background: #00a8fc; }
-      .log .ok i { background: #23a55a; } .log .err i { background: #f23f43; }
-      .log .warn i { background: #f0b232; } .log .run i { background: #5865f2; }
-      .set { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
-      .lbl { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 11.5px;
-        font-weight: 600; color: #949ba4; }
-      .sw { position: relative; width: 34px; height: 20px; border-radius: 10px; background: #4e5058;
-        transition: background .18s; flex: none; }
-      .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+      .log i { flex: none; width: 6px; height: 6px; border-radius: 50%; margin-top: 6px; background: #00a8fc; }
+      .log .ok i { background: #57f287; } .log .err i { background: #f23f43; }
+      .log .warn i { background: #f0b232; } .log .run i { background: #8b95ff; }
+      .set { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
+      .lbl { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px;
+        font-weight: 700; color: #f2f3f5; min-height: 40px; }
+      .sw { position: relative; width: 42px; height: 24px; border-radius: 12px; background: #4e5058; border: none;
+        padding: 0; cursor: pointer; transition: background .18s; flex: none; }
+      .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
         border-radius: 50%; background: #fff; transition: transform .18s ease; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
-      .sw.on { background: linear-gradient(90deg, #23a55a, #2dc777); }
-      .sw.on::after { transform: translateX(14px); }
-      .ghost { border: none; border-radius: 8px; background: rgba(255,255,255,.08); color: #c6c9ce;
-        font-size: 11px; font-weight: 700; padding: 6px 11px; cursor: pointer; transition: background .15s, color .15s; }
-      .ghost:hover { background: rgba(255,255,255,.15); color: #fff; }
-    `;
+      .sw.on { background: #5865f2; }
+      .sw.on::after { transform: translateX(18px); }
+      .ghost { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px;
+        border-radius: 12px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.1);
+        color: #f2f3f5; font-size: 13px; font-weight: 700; cursor: pointer; transition: background .15s; }
+      .ghost:hover { background: rgba(255,255,255,.18); }
+`;
     sh.appendChild(style);
 
     const chip = document.createElement("button");
@@ -558,17 +556,18 @@ try { delete window.$; } catch (_) {}
     panel.className = "panel";
     panel.innerHTML = `
       <div class="head">
-        <div class="ico">⚡</div>
+        <svg class="grip" aria-hidden="true" width="12" height="20" viewBox="0 0 14 22" fill="#b5bac1"><circle cx="4" cy="5" r="2"/><circle cx="10" cy="5" r="2"/><circle cx="4" cy="11" r="2"/><circle cx="10" cy="11" r="2"/><circle cx="4" cy="17" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+        <div class="ico"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></div>
         <div class="tt"><b>Автоквесты</b><span>загрузка…</span></div>
-        <button class="xbtn" title="Свернуть">✕</button>
+        <button class="xbtn" title="Свернуть" aria-label="Свернуть"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
       <div class="sum"><i></i></div>
       <div class="body"></div>
       <div class="foot">
         <div class="log"></div>
         <div class="set">
-          <label class="lbl"><span class="sw"></span>Принимать новые</label>
-          <button class="ghost">Обновить</button>
+          <div class="lbl"><button class="sw" role="switch" aria-checked="false" aria-label="Принимать новые"></button><span>Принимать новые</span></div>
+          <button class="ghost"><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>Обновить</button>
         </div>
       </div>`;
     sh.appendChild(panel);
@@ -632,7 +631,9 @@ try { delete window.$; } catch (_) {}
     });
     panel.querySelector(".xbtn").addEventListener("click", (e) => { e.stopPropagation(); panel.style.display = "none"; });
     panel.querySelector(".ghost").addEventListener("click", () => window.__questsRescan?.());
-    swEl.addEventListener("click", () => { CONFIG.autoEnroll = !CONFIG.autoEnroll; swEl.classList.toggle("on", CONFIG.autoEnroll); });
+    const syncSw = () => { swEl.classList.toggle("on", CONFIG.autoEnroll); swEl.setAttribute("aria-checked", String(!!CONFIG.autoEnroll)); };
+    syncSw();
+    panel.querySelector(".lbl").addEventListener("click", () => { CONFIG.autoEnroll = !CONFIG.autoEnroll; syncSw(); });
 
     const logClass = (l) =>
       l.startsWith("✔") ? "ok" : l.startsWith("✖") ? "err" : /Наград|капч|Капч/i.test(l) ? "warn" : l.startsWith("▶") ? "run" : "info";
@@ -665,13 +666,16 @@ try { delete window.$; } catch (_) {}
       for (const f of flash) {
         const d = document.createElement("div");
         d.className = "flash";
-        d.textContent = `✔ ${f.name} — готово!`;
+        d.innerHTML = `<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7df5a5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>`;
+        const ft = document.createElement("span");
+        ft.textContent = `${f.name} — готово!`;
+        d.appendChild(ft);
         frag.appendChild(d);
       }
       if (!active.length && !flash.length) {
         const d = document.createElement("div");
         d.className = "empty";
-        d.innerHTML = `<i>🎮</i><b>Сейчас квестов нет</b><s>Новые подхватятся автоматически</s>`;
+        d.innerHTML = `<i><svg aria-hidden="true" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="4"/><path d="M8 10.5v4M6 12.5h4M16 11h.01M18 14h.01"/></svg></i><b>Сейчас квестов нет</b><s>Новые подхватятся автоматически</s>`;
         frag.appendChild(d);
       }
       for (const { name, text } of active) {
