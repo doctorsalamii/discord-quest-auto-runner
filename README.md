@@ -101,6 +101,7 @@ systemctl --user disable --now discord-quests.service
 | Heartbeat 401/403 on some quest | That quest type is desktop-only or manual — the script tells you which |
 | Reward not auto-claimed | Claim it on the quest card — one click |
 | DevTools don't open (desktop) | Check the settings.json key, restart Discord **after** editing |
+| **Discord crashes on every launch with SIGTRAP** (Omarchy shows a crash notification) | If it happens only when launched from the menu: the menu may be opening the **package's own** `discord.desktop` (which starts Discord under uwsm/systemd-run — on some setups every Electron child process then dies with `FD ownership violation`). This installer writes its own entry as **both** `Discord.desktop` and `discord.desktop`, so the menu always opens the wrapper. Check with: `cat ~/.local/share/applications/discord.desktop` — it should point to `~/.local/bin/discord-quests` |
 | **Panel / script is missing right after opening Discord** | **Just wait 1–2 minutes.** On startup the supervisor waits for its next scan cycle, and if the client restarted *itself* (its own "Restart", self-update), the supervisor first waits out a 2-minute cooldown and only then relaunches it with the debug port. It self-heals — see the supervisor log if you are impatient: `~/.local/share/discord-quests/supervisor.log` |
 
 ## Self-healing notes

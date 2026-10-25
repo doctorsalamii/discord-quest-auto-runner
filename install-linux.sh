@@ -9,6 +9,7 @@ CONFIG_DIR="$HOME/.config/discord"
 SETTINGS="$CONFIG_DIR/settings.json"
 SERVICE="$HOME/.config/systemd/user/discord-quests.service"
 DESKTOP="$HOME/.local/share/applications/Discord.desktop"
+DESKTOP_LOWER="$HOME/.local/share/applications/discord.desktop"
 SCRIPT_URL_QUESTS="https://raw.githubusercontent.com/doctorsalamii/discord-quest-auto-runner/main/quests-en.js"
 SCRIPT_URL_INJECT="https://raw.githubusercontent.com/doctorsalamii/discord-quest-auto-runner/main/supervisor/inject.mjs"
 
@@ -77,7 +78,8 @@ Icon=discord
 StartupNotify=true
 Categories=Network;InstantMessaging;
 EOF
-ok "Desktop entry updated"
+cp "$DESKTOP" "$DESKTOP_LOWER"
+ok "Desktop entry updated (both Discord.desktop and discord.desktop — the lowercase one shadows the package's own entry, whose plain launch crashes on some setups)"
 
 # --- 6. systemd user service -------------------------------------------------
 mkdir -p "$(dirname "$SERVICE")"
