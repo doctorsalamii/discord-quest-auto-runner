@@ -39,6 +39,10 @@ try { delete window.$; } catch (_) {}
   }
   // Set the marker right away: the supervisor uses it to see the injection started
   window.__questsRunning = true;
+  // Build stamp: the supervisor compares it with its local copy and re-injects
+  // the script when the client still runs an older build (a host can survive
+  // navigation between pages).
+  window.__questsBuild = "2026-10-25.3";
 
   /* ---------- settings ---------- */
   const CONFIG = {

@@ -20,11 +20,15 @@ const log = (m) => {
 };
 
 const script = readFileSync(`${DIR}/quests.js`, "utf8");
+// Билд читаем из самого скрипта — правка quests.js автоматически меняет метку.
+const buildMatch = script.match(/__questsBuild\s*=\s*"([^"]+)"/);
+const LOCAL_BUILD = buildMatch ? buildMatch[1] : null;
 
 const MARKER = `JSON.stringify({
   ready: typeof webpackChunkdiscord_app !== "undefined",
   run: typeof __questsRunning === "undefined" ? null : __questsRunning === true,
-  stopped: window.__questsStoppedByUser === true
+  stopped: window.__questsStoppedByUser === true,
+  build: typeof __questsBuild === "undefined" ? null : __questsBuild
 })`;
 
 function connect(target) {
@@ -134,8 +138,11 @@ async function cycle() {
     const st = await send("Runtime.evaluate", { expression: MARKER, returnByValue: true });
     const m = JSON.parse(st.result?.value ?? "{}");
     if (!m.ready) return;                       // клиент ещё грузится
-    if (m.run === true) return;                 // скрипт уже работает
-    if (m.stopped) return;                      // пользователь остановил вручную
+    if (m.run === true && m.build === LOCAL_BUILD) return; // та же версия — живёт
+    if (m.stopped && m.build === LOCAL_BUILD) return;      // юзер остановил текущую
+    if (m.run === true) log(`устаревший билд в клиенте (${m.build ?? "нет"} → ${LOCAL_BUILD}) — переливаю`);
+    // устаревшая копия (или её остановка) — сбрасываем маркеры и льём свежую
+    await send("Runtime.evaluate", { expression: "window.__questsStoppedByUser = false; window.__questsRunning = false; document.getElementById('dqs-ui-host')?.remove();", returnByValue: true });
 
     const res = await send("Runtime.evaluate", { expression: script, awaitPromise: false, returnByValue: false });
     if (res.exceptionDetails) {
