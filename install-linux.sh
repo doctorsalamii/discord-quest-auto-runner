@@ -59,7 +59,21 @@ mkdir -p "$BIN"
 cat > "$BIN/discord-quests" <<'EOF'
 #!/bin/sh
 # Starts the real Discord client with a debug port for the quest supervisor.
-exec ~/.config/discord/app-*/Discord --remote-debugging-port=9222 "$@"
+# FD hygiene: Electron 44+ (Discord 1.0.168) kills its own children when stray
+# inherited file descriptors are present ("FD ownership violation" -> the client
+# SIGTRAPs itself), so close everything above stderr before exec.
+snap=$(ls /proc/self/fd 2>/dev/null)
+for n in $snap; do
+  case "$n" in
+    0|1|2) ;;
+    *) eval "exec $n>&-" 2>/dev/null ;;
+  esac
+done
+
+for d in "$HOME"/.config/discord/app-*/Discord /usr/lib/discord/Discord /opt/Discord/Discord; do
+  [ -x "$d" ] && exec "$d" --remote-debugging-port=9222 "$@"
+done
+exec discord --remote-debugging-port=9222 "$@"
 EOF
 chmod +x "$BIN/discord-quests"
 ok "Launcher: $BIN/discord-quests"

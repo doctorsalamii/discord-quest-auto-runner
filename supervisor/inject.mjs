@@ -88,21 +88,50 @@ function envOf(pid) {
   } catch (_) { return {}; }
 }
 
+// Окружение графической сессии, когда живых процессов Discord нет:
+// берём у композитора/сессии (Hyprland, uwsm), иначе — текущее.
+function sessionEnv() {
+  try {
+    for (const d of readdirSync("/proc")) {
+      if (!/^\d+$/.test(d)) continue;
+      let argv0;
+      try { argv0 = readFileSync(`/proc/${d}/cmdline`, "utf8").split("\0")[0] ?? ""; } catch (_) { continue; }
+      if (!/(Hyprland|uwsm_app-daemon|sway$|gnome-shell|kwin_wayland)/.test(argv0)) continue;
+      const env = envOf(d);
+      if (env.WAYLAND_DISPLAY || env.DISPLAY) return env;
+    }
+  } catch (_) {}
+  return { ...process.env };
+}
+
+// Был ли свежий coredump Discord'а (за последние minutes минут) —
+// признак того, что клиент вылетел и остался закрытым.
+function discordCrashedRecently(minutes = 15) {
+  try {
+    const dir = "/var/lib/systemd/coredump";
+    const cutoff = Date.now() - minutes * 60000;
+    for (const f of readdirSync(dir)) {
+      if (!f.startsWith("core.Discord")) continue;
+      const st = statSync(`${dir}/${f}`);
+      if (st.mtimeMs > cutoff) return true;
+    }
+  } catch (_) {}
+  return false;
+}
+
 let lastRelaunch = 0;
-function maybeRelaunch() {
-  if (existsSync(`${DIR}/NO_RELAUNCH`)) return;
-  if (Date.now() - lastRelaunch < 120000) return;
-  const bare = bareDiscord();
-  if (!bare.length) return; // Discord просто не запущен — его запустит пользователь
+function relaunchNow(reason) {
   lastRelaunch = Date.now();
-  log(`Discord запущен без порта отладки (pid ${bare.map((b) => b.pid).join(",")}) — перезапускаю через лаунчер`);
+  log(`${reason} — запускаю через лаунчер`);
+  // окружение: у живого процесса Discord, если он есть, иначе сессионное
+  const bare = bareDiscord();
+  const env = { ...(bare.length ? envOf(bare[0].pid) : sessionEnv()), ...process.env };
   try {
     execSync("killall Discord 2>/dev/null || true", { shell: "/bin/bash" });
   } catch (_) {}
   setTimeout(() => {
     try { execSync("killall -9 Discord 2>/dev/null || true", { shell: "/bin/bash" }); } catch (_) {}
     setTimeout(() => {
-      const env = { ...process.env, ...envOf(bare[0].pid) };
       try {
         const child = spawn(WRAPPER, [], { detached: true, stdio: "ignore", env });
         child.unref();
@@ -114,12 +143,30 @@ function maybeRelaunch() {
   }, 4000);
 }
 
+function maybeRelaunch() {
+  if (existsSync(`${DIR}/NO_RELAUNCH`)) return;
+  if (Date.now() - lastRelaunch < 120000) return;
+  const bare = bareDiscord();
+  if (!bare.length) return; // Discord просто не запущен — его запустит пользователь
+  relaunchNow(`Discord запущен без порта отладки (pid ${bare.map((b) => b.pid).join(",")})`);
+}
+
+// Клиент вылетел и остался закрытым (свежий coredump Discord'а) — поднимаем сами.
+function maybeReviveAfterCrash() {
+  if (existsSync(`${DIR}/NO_RELAUNCH`)) return;
+  if (Date.now() - lastRelaunch < 120000) return;
+  if (bareDiscord().length) return;   // живой (пусть и без порта) клиент — не наша история
+  if (!discordCrashedRecently(15)) return;
+  relaunchNow("обнаружен краш Discord без последующего запуска");
+}
+
 async function cycle() {
   let targets;
   try {
     targets = await (await fetch("http://127.0.0.1:9222/json", { signal: AbortSignal.timeout(3000) })).json();
   } catch (_) {
     maybeRelaunch(); // порт не отвечает
+    maybeReviveAfterCrash();
     return;
   }
   const pages = targets.filter((t) => t.type === "page" && t.url.startsWith("https://discord.com/"));
