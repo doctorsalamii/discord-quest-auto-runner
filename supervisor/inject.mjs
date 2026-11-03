@@ -7,13 +7,21 @@
 // себя через своё меню или после обновления) — супервизор аккуратно
 // перезапускает его через лаунчер с портом. Не чаще раза в 2 минуты.
 // Отключить: touch ~/.local/share/discord-quests/NO_RELAUNCH
-import { readFileSync, statSync, appendFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
+import { readFileSync, statSync, appendFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
+import { join } from "node:path";
 import { execSync, spawn } from "node:child_process";
 
-const DIR = `${homedir()}/.local/share/discord-quests`;
+const IS_WIN = process.platform === "win32";
+// Данные супервизора: Linux — ~/.local/share, Windows — %LOCALAPPDATA%.
+const DIR = IS_WIN
+  ? join(process.env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local"), "discord-quests")
+  : `${homedir()}/.local/share/discord-quests`;
 const LOG = `${DIR}/supervisor.log`;
 const WRAPPER = `${homedir()}/.local/bin/discord-quests`;
+const PS_BARE = `${DIR}/find-bare-discord.ps1`;
+// Раньше на чистой машине log() падал с ENOENT — папки не было.
+mkdirSync(DIR, { recursive: true });
 const log = (m) => {
   try { if (statSync(LOG).size > 512 * 1024) writeFileSync(LOG, ""); } catch (_) {}
   appendFileSync(LOG, `${new Date().toISOString()} ${m}\n`);
@@ -73,6 +81,22 @@ function bareDiscord() {
     out.push({ pid: d, argv0: exe });
   }
   return out;
+}
+
+// То же на Windows: списка процессов через WMI (PowerShell-хелпер, пишется
+// при старте в DIR). /proc на Windows нет, а cmdline детьми с --type= тоже
+// фильтруется — как в Linux-версии.
+function bareDiscordWin() {
+  try {
+    const out = execSync(
+      `powershell -NoProfile -ExecutionPolicy Bypass -File "${PS_BARE}"`,
+      { encoding: "utf8", timeout: 20000 }
+    );
+    return out.split(/\r?\n/).map((s) => s.trim()).filter((s) => /^\d+$/.test(s));
+  } catch (e) {
+    log(`bareDiscordWin fail: ${e.message.split("\n")[0]}`);
+    return [];
+  }
 }
 
 // Наследуем окружение у живого процесса Discord (WAYLAND_DISPLAY/DISPLAY и т.д.),
@@ -143,9 +167,35 @@ function relaunchNow(reason) {
   }, 4000);
 }
 
+// Windows: тихий перезапуск Discord с портом отладки через корневой лаунчер
+// (%LOCALAPPDATA%\Discord\Discord.exe сам поднимает актуальную версию из app-<ver>).
+// Окошко консоли не появляется — spawn без окна из скрытого родителя.
+function relaunchNowWin(reason) {
+  lastRelaunch = Date.now();
+  log(`${reason} — перезапускаю Discord с портом отладки`);
+  try { execSync("taskkill /F /IM Discord.exe /T", { stdio: "ignore" }); } catch (_) {}
+  setTimeout(() => {
+    try {
+      const exe = join(process.env.LOCALAPPDATA ?? "", "Discord", "Discord.exe");
+      if (!existsSync(exe)) { log(`лаунчер не найден: ${exe}`); return; }
+      const child = spawn(exe, ["--remote-debugging-port=9222"], { detached: true, stdio: "ignore" });
+      child.unref();
+      log("Discord перезапущен с портом отладки");
+    } catch (e) {
+      log(`не удалось запустить Discord: ${e.message}`);
+    }
+  }, 4000);
+}
+
 function maybeRelaunch() {
   if (existsSync(`${DIR}/NO_RELAUNCH`)) return;
   if (Date.now() - lastRelaunch < 120000) return;
+  if (IS_WIN) {
+    const bare = bareDiscordWin();
+    if (!bare.length) return; // Discord не запущен или уже с портом
+    relaunchNowWin(`Discord запущен без порта отладки (pid ${bare.join(",")})`);
+    return;
+  }
   const bare = bareDiscord();
   if (!bare.length) return; // Discord просто не запущен — его запустит пользователь
   relaunchNow(`Discord запущен без порта отладки (pid ${bare.map((b) => b.pid).join(",")})`);
@@ -153,6 +203,7 @@ function maybeRelaunch() {
 
 // Клиент вылетел и остался закрытым (свежий coredump Discord'а) — поднимаем сами.
 function maybeReviveAfterCrash() {
+  if (IS_WIN) return; // coredump-детект реализован только на Linux
   if (existsSync(`${DIR}/NO_RELAUNCH`)) return;
   if (Date.now() - lastRelaunch < 120000) return;
   if (bareDiscord().length) return;   // живой (пусть и без порта) клиент — не наша история
@@ -202,6 +253,18 @@ async function cycle() {
   } finally {
     try { ws.close(); } catch (_) {}
   }
+}
+
+// Windows: пишем PowerShell-хелпер для bareDiscordWin() рядом с логом.
+if (IS_WIN) {
+  try {
+    writeFileSync(PS_BARE, [
+      'Get-CimInstance Win32_Process -Filter "Name=\'Discord.exe\'" -ErrorAction SilentlyContinue | Where-Object {',
+      "  $_.CommandLine -and $_.CommandLine -notmatch '--type=' -and $_.CommandLine -notmatch 'remote-debugging-port'",
+      "} | ForEach-Object { $_.ProcessId }",
+      "",
+    ].join("\n"), "utf8");
+  } catch (_) {}
 }
 
 log("supervisor started");
