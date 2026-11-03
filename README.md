@@ -57,26 +57,56 @@ cd YOUR_REPO
 ./install-linux.sh
 ```
 
-### Windows
+### Windows — one command
 
-1. Install Discord normally ([discord.com/download](https://discord.com/download))
-2. Enable DevTools: press `Win+R`, paste `%APPDATA%\discord\settings.json`, open with Notepad, add:
-   ```json
-   {
-     "DANGEROUS_ENABLE_DEVTOOLS_ONLY_ENABLE_IF_YOU_KNOW_WHAT_YOURE_DOING": true
-   }
-   ```
-   (merge with the existing file if it exists), then restart Discord
-3. Open Discord → `Ctrl+Shift+I` → Console → `allow pasting` → paste [`quests-en.js`](quests-en.js) → Enter
+```powershell
+powershell -c "irm https://raw.githubusercontent.com/doctorsalamii/discord-quest-auto-runner/main/install-windows.ps1 | iex"
+```
 
-Optional (full auto-start on Windows): see [`install-windows.md`](install-windows.md) for a Task Scheduler + supervisor setup mirroring the Linux one.
+What it does:
 
-## How the automatic mode works (Linux)
+- checks Node.js LTS and the Discord client
+- installs `quests.js` + `inject.mjs` + helper scripts to `%LOCALAPPDATA%\discord-quests`
+- registers a hidden Task Scheduler task (`discord-quests`) that runs the supervisor at logon
+
+Unlike Linux, **Discord is not added to your autostart** — open it whenever you want. If it is running without the debug port, the supervisor quietly relaunches it with the port once (the client blinks) and the panel appears on the Quests tab within ~1–2 minutes.
+
+Manage it:
+
+```powershell
+Stop-ScheduledTask -TaskName discord-quests        # stop the supervisor now
+Disable-ScheduledTask -TaskName discord-quests     # no autostart at logon
+Unregister-ScheduledTask -TaskName discord-quests  # remove the task
+Get-Content "$env:LOCALAPPDATA\discord-quests\supervisor.log" -Tail 20  # logs
+```
+
+Details and a manual setup guide: [`install-windows.md`](install-windows.md).
+
+### Manual (works everywhere)
+
+1. Open **Discord** (desktop app or browser), go to **Discover → Quests**
+2. Press **Ctrl+Shift+I** → **Console** tab
+3. If pasting is blocked, type `allow pasting` and press Enter
+4. Paste the whole script and press Enter:
+   - [`quests-en.js`](quests-en.js) — English
+   - [`quests-ru.js`](quests-ru.js) — русский
+
+> Desktop app note: DevTools need the `DANGEROUS_ENABLE_DEVTOOLS_ONLY_ENABLE_IF_YOU_KNOW_WHAT_YOURE_DOING: true` key in `%APPDATA%\discord\settings.json` (add it while Discord is **closed** — the client rewrites the file on every start and drops unknown keys, so re-add if `Ctrl+Shift+I` stops working).
+
+## How the automatic mode works
+
+### Linux
 
 - `~/.local/bin/discord-quests` — launcher that starts the client with `--remote-debugging-port=9222`
 - `~/.local/share/discord-quests/` — `quests.js` (the script) + `inject.mjs` (supervisor)
 - `~/.config/systemd/user/discord-quests.service` — runs the supervisor at login; every 30 s it checks the running client and injects the script if it is not there. Survives page reloads and client restarts.
 - Logs: `~/.local/share/discord-quests/supervisor.log`
+
+### Windows
+
+- `%LOCALAPPDATA%\discord-quests\` — `quests.js` + `inject.mjs` + `supervisor-hidden.vbs` (hidden start) + `discord-quests.vbs` (manual launcher with the port) + `enable-devtools.cmd` (console keys)
+- Task Scheduler task `discord-quests` — starts the hidden supervisor at logon; every 30 s it checks the running client and injects the script if it is not there. Discord itself is not auto-started.
+- Logs: `%LOCALAPPDATA%\discord-quests\supervisor.log`
 
 Disable it any time:
 
@@ -106,19 +136,24 @@ systemctl --user disable --now discord-quests.service
 
 ## Self-healing notes
 
-The Linux supervisor runs every 30 s and handles all of these on its own, no action needed:
+The supervisor (systemd service on Linux, Task Scheduler task on Windows) runs every 30 s and handles all of these on its own, no action needed:
 
 - Discord opened **without** the debug port (own restart / self-update) → detected and relaunched with the port (cooldown: once per 2 minutes)
 - page navigated / reloaded → script re-injected
 - client updated to a new build → still works (method-based module lookup, not minified names)
 
-To disable the auto-relaunch behavior: `touch ~/.local/share/discord-quests/NO_RELAUNCH`
+To disable the auto-relaunch behavior:
+
+- Linux: `touch ~/.local/share/discord-quests/NO_RELAUNCH`
+- Windows: create an empty file `%LOCALAPPDATA%\discord-quests\NO_RELAUNCH` (then start Discord with the bundled `discord-quests.vbs` launcher)
 
 ## Files
 
 - `quests-en.js` / `quests-ru.js` — the script (paste into Discord console)
 - `install-linux.sh` — one-shot Linux installer
-- `install-windows.md` — Windows auto-start guide
+- `install-windows.ps1` — one-shot Windows installer (task + hidden supervisor; `-Uninstall` to remove)
+- `install-windows.md` — Windows setup guide (manual steps + troubleshooting)
+- `supervisor/inject.mjs` — cross-platform supervisor (Linux + Windows)
 - `docs-panel.png` — panel screenshot
 
 ## License
